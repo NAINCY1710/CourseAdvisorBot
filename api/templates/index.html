@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>
+        Course Advisor Bot
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="description" content="Get personalized course recommendations tailored to your goals">
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e1e2e 0%, #2d2d44 100%);
+            padding: 20px;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            min-height: calc(100vh - 40px);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            background: linear-gradient(45deg, #6c5ce7, #74b9ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #b0b0b0;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .chatbox {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 25px;
+            padding: 25px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 20px;
+        }
+
+        .chatlog {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 10px 0;
+            margin-bottom: 20px;
+            max-height: 500px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+        }
+
+        .chatlog::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chatlog::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chatlog::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+
+        .bubble {
+            margin: 12px 0;
+            padding: 16px 20px;
+            border-radius: 20px;
+            max-width: 85%;
+            line-height: 1.6;
+            position: relative;
+            animation: fadeIn 0.3s ease-in;
+            word-wrap: break-word;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .user {
+            background: linear-gradient(135deg, #6c5ce7, #74b9ff);
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+            border-bottom-right-radius: 8px;
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+        }
+
+        .bot {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            align-self: flex-start;
+            margin-right: auto;
+            border-bottom-left-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .input-section {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 15px 20px;
+            border-radius: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]:focus {
+            border-color: #6c5ce7;
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        input[type="text"]::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        button {
+            padding: 15px 25px;
+            border: none;
+            background: linear-gradient(135deg, #6c5ce7, #74b9ff);
+            color: white;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+            box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(108, 92, 231, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        a {
+            color: #74b9ff;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        a:hover {
+            color: #0984e3;
+            text-decoration: underline;
+        }
+
+        .footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                min-height: calc(100vh - 80px);
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .chatbox {
+                padding: 20px;
+                border-radius: 20px;
+            }
+            
+            .bubble {
+                max-width: 90%;
+                padding: 12px 16px;
+            }
+            
+            .input-section {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            input[type="text"] {
+                width: 100%;
+            }
+            
+            button {
+                width: 100%;
+            }
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            color: rgba(255, 255, 255, 0.7);
+            font-style: italic;
+        }
+
+        .typing-indicator.active {
+            display: flex;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.5;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Course Advisor Bot</h1>
+            <p>Get personalized course recommendations tailored to your goals</p>
+        </div>
+        
+        <div class="chatbox">
+            <div class="chatlog">
+                {% if chat_history %}
+                {% for entry in chat_history %}
+                <div class="bubble user">{{ entry.user }}</div>
+                <div class="bubble bot">
+                    {% for line in entry.bot.split('\n') %}
+                    {% if "http" in line %}
+                    {% set parts = line.split('🔗') %}
+                    {% if parts|length > 1 %}
+                    {{ parts[0] }} 🔗
+                    <a href="{{ parts[1] | trim }}" target="_blank">
+                        {{ parts[1] | trim }}
+                    </a>
+                    <br><br>
+                    {% else %}
+                    🔗
+                    <a href="{{ line.strip() }}" target="_blank">
+                        {{ line.strip() }}
+                    </a>
+                    <br><br>
+                    {% endif %}
+                    {% else %}
+                    {{ line }}<br>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+                {% endfor %}
+                {% endif %}
+                
+                <div class="typing-indicator">
+                    <span>Bot is Searching</span>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            </div>
+            
+            <form method="POST" class="input-section">
+                <input type="text" name="user_input" placeholder="Ask me about courses, skills or career paths..." required>
+                <button type="submit">Send</button>
+            </form>
+        </div>
+        
+        <div class="footer">
+            Made with &hearts; by Naincy and Aarjav Jain
+        </div>
+    </div>
+</body>
+
+<script>
+    window.onload = function () {
+        const chatlog = document.querySelector(".chatlog");
+        if (chatlog) {
+            chatlog.scrollTop = chatlog.scrollHeight;
+        }
+    }
+
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const typingIndicator = document.querySelector('.typing-indicator');
+        const chatlog = document.querySelector('.chatlog');
+        typingIndicator.classList.add('active');
+        setTimeout(() => {
+            chatlog.scrollTop = chatlog.scrollHeight;
+        }, 100);
+    });
+
+    const observer = new MutationObserver(function(mutations) {
+        const chatlog = document.querySelector('.chatlog');
+        chatlog.scrollTop = chatlog.scrollHeight;
+    });
+
+    if (document.querySelector('.chatlog')) {
+        observer.observe(document.querySelector('.chatlog'), {
+            childList: true,
+            subtree: true
+        });
+    }
+</script>
+
+</html>
